@@ -26,5 +26,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    print(' Cronjob complete '.center(50, '-'))
+    main()

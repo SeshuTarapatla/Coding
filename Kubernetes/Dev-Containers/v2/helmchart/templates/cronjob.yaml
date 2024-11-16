@@ -32,8 +32,8 @@ spec:
               readinessProbe:
                 exec:
                   command: ["test", "-f", "/mnt/full_load_complete"]
-                initialDelaySeconds: 5
-                periodSeconds: 10
+                periodSeconds: 5
+                failureThreshold: 1000
               volumeMounts:
                 - mountPath: /mnt
                   name: mnt-vol
@@ -46,8 +46,8 @@ spec:
               readinessProbe:
                 exec:
                   command: ["test", "-f", "/mnt/synonyms_load_complete"]
-                initialDelaySeconds: 5
-                periodSeconds: 10
+                periodSeconds: 5
+                failureThreshold: 1000
               volumeMounts:
                 - mountPath: /mnt
                   name: mnt-vol
