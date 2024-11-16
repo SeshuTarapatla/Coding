@@ -1,0 +1,47 @@
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: test-deployment
+#   labels:
+#     app: test-deployment
+# spec:
+#   selector:
+#     matchLabels:
+#       app: test-deployment
+#   template:
+#     metadata:
+#       labels:
+#         app: test-deployment
+#     spec:
+#       volumes:
+#         - name: mnt-vol
+#           emptyDir:
+#             {}
+#       containers:
+#         - name: full-load
+#           image: test-image:latest
+#           command: ["python", "-u", "elr_postgres_company_page.py", "full_load"]
+#           ports:
+#             - containerPort: 8000
+#           imagePullPolicy: IfNotPresent
+#           volumeMounts:
+#             - mountPath: /mnt
+#               name: mnt-vol
+#         - name: synonyms-load
+#           image: test-image:latest
+#           command: ["python", "-u", "elr_postgres_company_page.py", "synonyms_load"]
+#           ports:
+#             - containerPort: 8001
+#           imagePullPolicy: IfNotPresent
+#           volumeMounts:
+#             - mountPath: /mnt
+#               name: mnt-vol
+#         - name: refresh-event
+#           image: test-image:latest
+#           command: ["python", "-u", "elr_postgres_company_page.py", "refresh_event"]
+#           ports:
+#             - containerPort: 8002
+#           imagePullPolicy: IfNotPresent
+#           volumeMounts:
+#             - mountPath: /mnt
+#               name: mnt-vol

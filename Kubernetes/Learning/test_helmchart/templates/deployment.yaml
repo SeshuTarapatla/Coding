@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.label }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.label }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.label }}
+    spec:
+      volumes:
+        - name: mnt-volume
+          emptyDir: {}
+      containers:
+        - name: full-load
+          image: {{ .Values.image.name }}:{{ .Values.image.version }}
+          ports:
+            - containerPort: 8000
+          command: ['python', '-u', 'elr_portgres_company_page.py', 'full-load']
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /mnt
+              name: mnt-volume
+        - name: synonyms-load
+          image: {{ .Values.image.name }}:{{ .Values.image.version }}
+          ports:
+            - containerPort: 8001
+          command: ['python', '-u', 'elr_portgres_company_page.py', 'synonyms-load']
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /mnt
+              name: mnt-volume
+        - name: refresh-event
+          image: {{ .Values.image.name }}:{{ .Values.image.version }}
+          ports:
+            - containerPort: 8002
+          command: ['python', '-u', 'elr_portgres_company_page.py', 'refresh-event']
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /mnt
+              name: mnt-volume
+        - name: test-container
+          image: {{ .Values.image.name }}:{{ .Values.image.version }}
+          ports:
+            - containerPort: 8008
+          command: ['python', '-u', 'main.py']
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /mnt
+              name: mnt-volume

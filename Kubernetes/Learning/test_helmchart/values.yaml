@@ -1,0 +1,7 @@
+name: test-deployment
+specName: test-pod
+label: python
+image:
+  name: test-image
+  version: latest
+containerPort: 8080

@@ -1,0 +1,11 @@
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: {{ .Values.name }}
+# spec:
+#   containers:
+#   - name: python
+#     image: {{ .Values.image.name }}:{{ .Values.image.version }}
+#     ports:
+#     - containerPort: {{ .Values.containerPort }}
+#     imagePullPolicy: IfNotPresent

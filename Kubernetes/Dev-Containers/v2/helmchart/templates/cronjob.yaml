@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: test
+spec:
+  concurrencyPolicy: Forbid
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+            - name: mnt-vol
+              emptyDir:
+                {}
+          containers:
+            - name: full-load
+              image: test-image:latest
+              command: ["python", "-u", "elr_postgres_company_page.py", "full_load"]
+              ports:
+                - containerPort: 8000
+              imagePullPolicy: IfNotPresent
+              volumeMounts:
+                - mountPath: /mnt
+                  name: mnt-vol
+            - name: synonyms-load
+              image: test-image:latest
+              command: ["python", "-u", "elr_postgres_company_page.py", "synonyms_load"]
+              ports:
+                - containerPort: 8001
+              imagePullPolicy: IfNotPresent
+              readinessProbe:
+                exec:
+                  command: ["test", "-f", "/mnt/full_load_complete"]
+                initialDelaySeconds: 5
+                periodSeconds: 10
+              volumeMounts:
+                - mountPath: /mnt
+                  name: mnt-vol
+            - name: refresh-event
+              image: test-image:latest
+              command: ["python", "-u", "elr_postgres_company_page.py", "refresh_event"]
+              ports:
+                - containerPort: 8002
+              imagePullPolicy: IfNotPresent
+              readinessProbe:
+                exec:
+                  command: ["test", "-f", "/mnt/synonyms_load_complete"]
+                initialDelaySeconds: 5
+                periodSeconds: 10
+              volumeMounts:
+                - mountPath: /mnt
+                  name: mnt-vol
+          restartPolicy: OnFailure

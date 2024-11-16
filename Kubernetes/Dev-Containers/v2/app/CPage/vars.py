@@ -1,0 +1,4 @@
+
+
+TIME_DELAY  = 60
+SLEEP_DELAY = 5
