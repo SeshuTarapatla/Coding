@@ -31,6 +31,10 @@ class resourceIds(Enum):
     reels_likes_banner     = "Plays & likes"
     reels_likes_banner_alt = "Plays and reactions"
 
+    message_box            = "com.instagram.android:id/message_content"
+    message_box_avatar     = "com.instagram.android:id/avatar"
+    message_box_title      = "com.instagram.android:id/title"
+
 
 
 @dataclass
@@ -134,7 +138,7 @@ class Profile:
         # return or save
         if save:
             report_dst = Path(f"Profiles/Users/{self.title}.jpg")
-            report.save(report_dst, quality=100, optimize=True)
+            report.save(report_dst, optimize=True)
         else:
             return report
     
@@ -180,8 +184,41 @@ class Liked_User(Follower):
         except Exception:
             self.title = ""
             self.follow = ""
-            
 
+@dataclass
+class Saved_User(Follower):
+    is_profile: bool
+
+    def __init__(self, element: u2.UiObject) -> None:
+        self.follow = "Follow"
+        self.is_profile = False
+        super().__init__(element)
+    
+    def get_attributes(self) -> None:
+        try:
+            self.title = self.element.child(resourceId=resourceIds.message_box_title.value).get_text(timeout=1)
+        except Exception:
+            self.title = ""
+    
+    def generate_profile(self) -> None:
+        self.element.click()
+        start = datetime.now()
+        while True:
+            if list(oneplus(resourceIds.post_liked_stub)) or list(oneplus(resourceIds.post_liked_count)):
+                oneplus.press("back")
+                break
+            elif list(oneplus(resourceIds.followers_count)): 
+                oneplus.press("back")
+                self.is_profile = True
+                return super().generate_profile()
+            else:
+                current = datetime.now()
+                if (current - start).seconds > 10:
+                    oneplus.press("back")
+                    break
+                    
+
+            
 class Instagram:
     def __init__(self) -> None:
         self.profiles_dir      : Path = Path("./Profiles")
@@ -200,6 +237,8 @@ class Instagram:
             self.liked_users_from_post()
         elif 'Like number is' in oneplus.dump_hierarchy():
             self.liked_users_from_reel()
+        elif list(oneplus(resourceIds.message_box)):
+            self.saved_users_from_chat()
 
     def followers_from_profile(self) -> None:
         with Status("Generating profile report"):
@@ -212,7 +251,7 @@ class Instagram:
             report_path = self.save_dir / f"{self.profile.title}.jpg"
             if not report_path.exists():
                 report = self.profile.generate_report()
-                report.save(report_path, quality=100, optimize=True)
+                report.save(report_path, optimize=True)
             self.update_scanned_users(self.profile.title)
             print()
         # sort scanned list file & close
@@ -246,7 +285,64 @@ class Instagram:
         else:
             log.error("Didn't find liked element to click")
         self.liked_users_scan()
+    
+    def saved_users_from_chat(self) -> None:
+        def scroll_inverse(only_last: bool = False):
+            current_batch = list(oneplus(resourceIds.message_box))
+            try:
+                sx, ex = [oneplus.info["displayWidth"] // 2] * 2
+                sy = current_batch[0].info["visibleBounds"]["top"]
+                ey = current_batch[-1].info["visibleBounds"]["top"]
+                if only_last:
+                    profile_msgs = list(filter(lambda x: list(x.child(resourceId=resourceIds.message_box_avatar.value)), all_msgs))
+                    if profile_msgs:
+                        sy = profile_msgs[-2].info["visibleBounds"]["top"]
+                oneplus.swipe_points([[sx,sy],[ex,ey]], duration=1)
+            except Exception:
+                if list(oneplus(text="OK")):
+                    oneplus(text="OK").click()
+                    scroll_inverse(only_last)
+                else:
+                    log.error("Failed to scroll chat")
+
         
+        def unsend_user(msg: Saved_User) -> None:
+            msg.element.long_click()
+            oneplus(text="Unsend").click()
+
+        log.info("Getting saved users from a chat\n")
+        self.save_dir = self.users_dir / "Saved_users"
+        self.save_dir.mkdir(exist_ok=True)
+        progress_columns = [SpinnerColumn(),TextColumn("[green]Scanning"),BarColumn(),TextColumn("{task.percentage:>3.0f}%"),TimeRemainingColumn(),TextColumn("{task.description}")]
+        progress = Progress(*progress_columns)
+        progress.start()
+        count = 100
+        task = progress.add_task("Scanning...", total=count)
+
+        log.info("Started scanning")
+        index = 0
+        while True:
+            self.remove_post_unavailable_msgs()
+            all_msgs = list(oneplus(resourceIds.message_box))
+            profile_msgs = list(filter(lambda x: list(x.child(resourceId=resourceIds.message_box_avatar.value)), all_msgs))
+            if profile_msgs:
+                saved_user = Saved_User(profile_msgs[-1])
+                index += 1
+                progress.update(task, advance=1, description=f"[purple]{saved_user.title} [yellow]{index}/{count}")
+                saved_user.generate_profile()
+                if not saved_user.is_profile:
+                    scroll_inverse(only_last=True)
+                    continue
+                if not saved_user.verified:
+                    report = saved_user.generate_report()
+                    save_path = self.save_dir / f"{saved_user.title}.jpg"
+                    report.save(save_path, optimize=True)
+                oneplus.press("back")
+                unsend_user(saved_user)
+                self.update_scanned_users(saved_user.title)
+            else:
+                scroll_inverse()
+            
     def liked_users_scan(self) -> None:
         def wait():
             while not list(oneplus(resourceIds.liked_list_container)):
@@ -290,7 +386,7 @@ class Instagram:
                     if not liked_user.verified:
                         report = liked_user.generate_report()
                         save_path = self.save_dir / f"{liked_user.title}.jpg"
-                        report.save(save_path, quality=100, optimize=True)
+                        report.save(save_path, optimize=True)
                     oneplus.press("back")
                 self.update_scanned_users(liked_user.title)
                 if liked_user.title not in current_set:
@@ -360,7 +456,7 @@ class Instagram:
                     if not follower.verified:
                         report = follower.generate_report()
                         save_path = self.save_dir / f"{follower.title}.jpg"
-                        report.save(save_path, quality=100, optimize=True)
+                        report.save(save_path, optimize=True)
                     oneplus.press("back")
                 self.update_scanned_users(follower.title)
                 if follower.title not in current_set:
@@ -373,6 +469,21 @@ class Instagram:
         progress.stop()
         self.update_count(index)
     
+    def remove_post_unavailable_msgs(self) -> None:
+        while list(oneplus(text="Post unavailable")):
+            delete_batch: list[u2.UiObject] = list(oneplus(text="Post unavailable"))
+            if delete_batch:
+                element = delete_batch[0]
+                try:
+                    element.long_click()
+                    oneplus(text="Unsend").click()
+                except Exception:
+                    return
+            else:
+                if list(oneplus(text="OK")):
+                    oneplus(text="OK").click()
+                break
+
     def get_reels_banner_element(self) -> u2.UiObject:
         while True:
             original  = list(oneplus(text=resourceIds.reels_likes_banner.value))
