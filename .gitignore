@@ -7,3 +7,10 @@ w-adb
 
 # Pycache
 __pycache__
+
+# Virtual environments
+.venv
+venv
+
+# VScode configs
+.vscode
