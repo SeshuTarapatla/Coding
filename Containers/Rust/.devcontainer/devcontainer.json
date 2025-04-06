@@ -1,0 +1,21 @@
+{
+    "build": {
+        "dockerfile": "./dockerfile"
+    },
+    "mounts": ["source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"],
+    "workspaceFolder": "/app",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode-remote.remote-containers",
+                "ms-azuretools.vscode-docker",
+                "rust-lang.rust-analyzer"
+            ],
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    },
+    "remoteUser": "seshu",
+    "postCreateCommand": "sudo chmod 777 -R $PWD/.devcontainer/"
+}

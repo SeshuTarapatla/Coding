@@ -1,16 +1,18 @@
 # IDE Folders
 .idea
+.vscode
 
 # GIT Projects
 Fetch-Spotlight
 w-adb
+Helmcharts
 
-# Pycache
+# Python ignore
 __pycache__
-
-# Virtual environments
-.venv
 venv
+.venv
 
-# VScode configs
-.vscode
+# Rust ignore
+target
+Rust/**/*.exe
+Rust/**/*.pdb
