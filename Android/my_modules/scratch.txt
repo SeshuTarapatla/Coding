@@ -1,0 +1,15 @@
+import subprocess
+
+startupinfo = subprocess.STARTUPINFO()
+startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+startupinfo.wShowWindow = subprocess.SW_HIDE
+
+emulator_process = subprocess.Popen(
+    "emulator -avd emulator -gpu host -no-audio",
+    shell=True,
+    stdout=subprocess.DEVNULL,
+    stderr=subprocess.DEVNULL,
+    startupinfo=startupinfo
+)
+
+print(f"Emulator started with PID: {emulator_process.pid}")
