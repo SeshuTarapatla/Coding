@@ -12,9 +12,6 @@ def status_decorator(message: str) -> Callable:
 
     Args:
         message (str): Status messsage.
-
-    Returns:
-        Callable: Input function.
     """
     def decorator(func: Callable)  -> Callable:
         @wraps(func)

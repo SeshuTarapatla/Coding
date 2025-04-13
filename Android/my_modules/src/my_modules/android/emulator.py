@@ -1,11 +1,12 @@
 from datetime import datetime
-from time import sleep
+from typing import cast
 
+from adbutils import AdbError, adb, AdbDevice # type: ignore
 import pyautogui as ag
 import pygetwindow as gw
 
 from my_modules.logger import status_decorator
-from my_modules.process import spawn_windows_process
+from my_modules.process import spawn_windows_process, wait_in_loop
 
 
 @status_decorator("Starting emulator")
@@ -33,11 +34,8 @@ def start(emulator: str = "emulator", snap_to_zone: bool = True) -> None:
         )
     # wait for it to spawn
     started_at = datetime.now()
-    time_limit: float = 30
     while not (windows := emu_window()):
-        sleep(1)
-        if (datetime.now() - started_at).seconds > time_limit:
-            raise TimeoutError("Failed to fetch the window of emulator.")
+        wait_in_loop(started_at, prompt="Failed to fetch the window of emulator.")
     if len(windows) == 1:
         window = windows[0]
     else:
@@ -57,3 +55,25 @@ def start(emulator: str = "emulator", snap_to_zone: bool = True) -> None:
             ag.moveTo(2000, 500)
             ag.mouseUp()
             ag.keyUp("shift")
+    # wait for device to boot
+    started_at = datetime.now()
+    device = cast(AdbDevice, None)
+    while not device:
+        try:
+            device = get_emulator()
+        except AdbError:
+            wait_in_loop(started_at, prompt="Emulator not booted")
+    while not (device.getprop("sys.boot_completed") == "1" and device.getprop("init.svc.bootanim") == "stopped"):
+        wait_in_loop(started_at, prompt="Emulator not booted")
+    device.app_start("com.instagram.android")
+
+
+def get_emulator() -> AdbDevice:
+    emulators = list(filter(lambda x: str(x.serial).startswith("emulator"), adb.device_list()))
+    if (total := len(emulators)) == 1:
+        return emulators[0]
+    elif total == 0:
+        raise AdbError("Can't find any android emulator")
+    else:
+        raise AdbError("More than one emulator found")
+    
