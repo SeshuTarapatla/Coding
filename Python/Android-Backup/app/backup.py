@@ -1,134 +1,22 @@
-from datetime import datetime
 from pathlib import Path, PurePosixPath
 from shutil import move
-from subprocess import run
 from time import sleep
-from typing import NamedTuple, cast
+from typing import cast
 
-from colorama import Fore
-from pandas import DataFrame, concat, read_csv
+from pandas import read_csv
 
+from app.delta import DeltaNamedTuple
 from app.render import Render
 from app.vars import (
-    DATAFRAME,
-    DELTA_COLUMNS,
+    BACKUP_DIR,
     DELTA_DATAFRAME,
     DELTA_DIR,
-    DEVICE_DATAFRAME,
     DEVICE_ROOT,
-    MYPASS,
-    RAR_EXECUTABLE,
     RECYCLE_BIN,
 )
-from utils import UTF_8_SIG, log
+from utils import log
 from utils.android import device
-from utils.terminal import colorize
 from utils.thread import ExceptionalThread
-
-
-def calculate_delta() -> None:
-    """Function to calculate the delta between current backup and existing backup to perform minimal operations
-    """
-    # Separate stage to calculate delta
-    log.stage("Delta")
-    log.info("Calculating Delta for minimal operations")
-    # variables
-    src_file = DATAFRAME
-    dst_file = DELTA_DATAFRAME
-    cmp_file = DEVICE_DATAFRAME
-    # read both dataframes
-    current_df = read_csv(src_file, encoding=UTF_8_SIG)
-    if cmp_file.exists():
-        backed_up_df = read_csv(cmp_file, encoding=UTF_8_SIG)
-    else:
-        backed_up_df = DataFrame(columns=current_df.columns)
-    # calculate delta as additions, deletions and modifications
-    additions = current_df[~current_df["Path"].isin(backed_up_df["Path"])]
-    deletions = backed_up_df[~backed_up_df["Path"].isin(current_df["Path"])]
-    merged = current_df.merge(backed_up_df, on="Path", suffixes=("", "_old"))
-    modifications = merged[(merged['Size'] != merged['Size_old']) | (merged['Date'] != merged['Date_old'])]
-    # add operation tag as kind
-    additions["Kind"] = "add"
-    deletions["Kind"] = "remove"
-    modifications['Kind'] = "modify"
-    # concat into single delta frame and save
-    delta_df = concat([additions, deletions, modifications])[DELTA_COLUMNS]
-    delta_df.to_csv(dst_file, index=False, encoding=UTF_8_SIG)
-    log.info(f"Delta DataFrame saved as   > {dst_file}")
-    # print stats
-    log.info(
-        f"Total operations:          > "
-        f"{colorize(len(delta_df), Fore.BLUE)} ["
-        f"{colorize(f"+{len(additions)}", Fore.GREEN)}, "
-        f"{colorize(f"~{len(modifications)}", Fore.YELLOW)}, "
-        f"{colorize(f"-{len(deletions)}", Fore.RED)}]"
-    )
-
-
-class DeltaNamedTuple(NamedTuple):
-    """A named tuple to enable typing hints for Deltaframe itertuples.
-    """
-    Index: int
-    File: str
-    Type: str
-    Size: int
-    Size_old: int
-    Date: str
-    Date_old: str
-    Path: str
-    Kind: str
-
-
-class Delta:
-    @staticmethod
-    def delta() -> None:
-        """Function to calculate the delta between current backup and existing backup to perform minimal operations
-        """
-        # Separate stage to calculate delta
-        log.stage("Delta")
-        log.info("Calculating Delta for minimal operations")
-        # variables
-        src_file = DATAFRAME
-        dst_file = DELTA_DATAFRAME
-        cmp_file = DEVICE_DATAFRAME
-        # read both dataframes
-        current_df = read_csv(src_file, encoding=UTF_8_SIG)
-        if cmp_file.exists():
-            backed_up_df = read_csv(cmp_file, encoding=UTF_8_SIG)
-        else:
-            backed_up_df = DataFrame(columns=current_df.columns)
-        # calculate delta as additions, deletions and modifications
-        additions = current_df[~current_df["Path"].isin(backed_up_df["Path"])]
-        deletions = backed_up_df[~backed_up_df["Path"].isin(current_df["Path"])]
-        merged = current_df.merge(backed_up_df, on="Path", suffixes=("", "_old"))
-        modifications = merged[(merged['Size'] != merged['Size_old']) | (merged['Date'] != merged['Date_old'])]
-        # add operation tag as kind
-        additions["Kind"] = "add"
-        deletions["Kind"] = "remove"
-        modifications['Kind'] = "modify"
-        # concat into single delta frame and save
-        delta_df = concat([additions, deletions, modifications])[DELTA_COLUMNS]
-        delta_df.to_csv(dst_file, index=False, encoding=UTF_8_SIG)
-        log.info(f"Delta DataFrame saved as   > {dst_file}")
-        # print stats
-        log.info(
-            f"Total operations:          > "
-            f"{colorize(len(delta_df), Fore.BLUE)} ["
-            f"{colorize(f"+{len(additions)}", Fore.GREEN)}, "
-            f"{colorize(f"~{len(modifications)}", Fore.YELLOW)}, "
-            f"{colorize(f"-{len(deletions)}", Fore.RED)}]"
-        )
-
-
-def delta_archive() -> None:
-    current_date = datetime.now().strftime("%Y%m%d%H%M%S")
-    rar_name = f"{DELTA_DIR.name}-{current_date}.rar"
-    rar_path = DELTA_DIR.parent/rar_name
-    args = [RAR_EXECUTABLE, "a", "-v1024m", f"-hp{MYPASS}", "-ep1", rar_path, DELTA_DIR]
-    log.info(f"Archiving delta for online backup. Timestamp: {current_date}")
-    run(args, shell=True)
-    total_rars = len(list(filter(lambda x: x.suffix == ".rar", DELTA_DIR.parent.iterdir())))
-    log.update(f"Archive complete. Total archives created: {total_rars}")
 
 
 class session(Render):
@@ -276,8 +164,8 @@ class session(Render):
         self.insert_into_files_panel(row.Path, row.Kind)
         # Calculate all file paths
         src_file = PurePosixPath(row.Path)
-        dst_file = DELTA_DIR/src_file.relative_to(DEVICE_ROOT)
-        del_file = RECYCLE_BIN/dst_file.relative_to(DELTA_DIR)
+        dst_file = BACKUP_DIR/src_file.relative_to(DEVICE_ROOT)
+        del_file = RECYCLE_BIN/dst_file.relative_to(BACKUP_DIR)
         # Create a dir in `Recycle Bin` for the file if not exists
         del_file.parent.mkdir(parents=True, exist_ok=True)
         # Move the file and update the progress bars

@@ -25,7 +25,7 @@ def write_out(ascii: str) -> None:
         ascii (str): Ascii string
     """
     stdout.write(ascii)
-    stdout. flush()
+    stdout.flush()
 
 
 def clear_line() -> None:

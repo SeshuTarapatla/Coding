@@ -42,4 +42,3 @@ class ExceptionalThread(Thread):
         super().join(timeout)
         if self._exception:
             raise self._exception
-

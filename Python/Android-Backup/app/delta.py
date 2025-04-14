@@ -1,6 +1,7 @@
 from pathlib import Path
 from shutil import copy2, move
 from subprocess import run
+from typing import NamedTuple
 
 from colorama import Fore
 from pandas import DataFrame, concat, read_csv
@@ -25,6 +26,20 @@ from utils import UTF_8_SIG, log
 from utils.android import DEVICE_MODEL
 from utils.terminal import colorize, previous_line
 
+
+class DeltaNamedTuple(NamedTuple):
+    """A named tuple to enable typing hints for Deltaframe itertuples.
+    """
+    Index: int
+    File: str
+    Type: str
+    Size: int
+    Size_old: int
+    Date: str
+    Date_old: str
+    Path: str
+    Kind: str
+    
 
 def calculate() -> None:
     """Function to calculate the delta between current backup and existing backup to perform minimal operations
@@ -93,7 +108,12 @@ def merge() -> None:
     # Create backup dir for device if not exists
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     # Move everything in delta dir to backup dir
-    [move(x, BACKUP_DIR) for x in DELTA_DIR.iterdir()]
+    # [move(x, BACKUP_DIR) for x in DELTA_DIR.iterdir()]
+    for src_file in DELTA_DIR.rglob("*"):
+        if src_file.is_file():
+            dst_file = BACKUP_DIR/src_file.relative_to(DELTA_DIR)
+            dst_file.parent.mkdir(parents=True, exist_ok=True)
+            move(src_file, dst_file)
     # delete Delta dir
     send2trash(BACKUP_ROOT/"Delta")
     # log updates and exit
@@ -108,10 +128,10 @@ def replace(src: Path, dst: Path) -> None:
         src (Path): Source file
         dst (Path): Destination folder
     """
-    file = dst/src.name
-    if file.exists():
-        send2trash(file)
-    move(src, dst)
+    try:
+        move(src, dst)
+    except OSError:
+        return
 
 
 def size() -> int:

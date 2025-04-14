@@ -108,9 +108,13 @@ class Render:
         self.files_panel.renderable = "\n".join(self.panel_queue)
 
     def update_files_panel_title(self, current: int = 0):
+        """Function used to update files panel title, processed by total count display
+
+        Args:
+            current (int, optional): total files processed. Defaults to 0.
+        """
         self.panel_processed = current
         self.files_panel.title = f"[bold]Files processed: [cyan]{current}[/cyan] | Total: [cyan]{self.panel_total}[/cyan]"
-
 
     def update_alt_progress_title(self, file: str = "") -> None:
         """Function that updates the alt progress bar title with input `file` name. If no input is given function resets the title to be blank.
@@ -124,9 +128,6 @@ class Render:
         self.renders[5] = self.alt_progress_title
         # update the live render
         self.live.update(Group(*self.renders))
-    
-    def update_render(self, file: str, kind: str, ):
-        ...
     
     def __enter__(self) -> Self:
         """Function to use render class with context. Starts the rich.live rendering

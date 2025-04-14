@@ -21,7 +21,7 @@ def info(message: str, success_log: bool = False) -> None:
 
     Args:
         message (str): Info message
-        success_log (bool): Bool that changes prefix color to green
+        success_log (bool, optional): Bool that changes prefix color to green. Defaults to False.
     """
     kwargs = {
         "prefix": "INFO",
