@@ -6,11 +6,17 @@
 Fetch-Spotlight
 w-adb
 Helmcharts
+Flutter-Apps
+
+# Tutorial projects
+Flutter/Codemy
+Flutter/Fireship
 
 # Python ignore
 __pycache__
 venv
 .venv
+Python/Hash/upload
 
 # Rust ignore
 target
