@@ -1,0 +1,20 @@
+[project]
+name = "hash"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "cryptography>=44.0.2",
+    "humanize>=4.12.1",
+    "ipykernel>=6.29.5",
+    "opencv-python>=4.11.0.86",
+    "pandas>=2.2.3",
+    "pillow>=11.1.0",
+    "pillow-heif>=0.22.0",
+    "psycopg2>=2.9.10",
+    "pyexiftool>=0.5.6",
+    "rich>=13.9.4",
+    "send2trash>=1.8.3",
+    "sqlalchemy>=2.0.39",
+    "tqdm>=4.67.1",
+    "xxhash>=3.5.0",
+]

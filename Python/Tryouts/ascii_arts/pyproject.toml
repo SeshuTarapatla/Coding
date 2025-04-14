@@ -1,0 +1,11 @@
+[project]
+name = "ascii-arts"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "ascii-magic>=2.3.0",
+    "cairosvg>=2.7.1",
+    "ipykernel>=6.29.5",
+    "ipywidgets>=8.1.5",
+    "pyfiglet>=1.0.2",
+]
