@@ -7,6 +7,8 @@ Fetch-Spotlight
 w-adb
 Helmcharts
 Flutter-Apps
+my-py-modules
+Android-Backup-Tool
 
 # Python ignore
 __pycache__
@@ -24,3 +26,6 @@ Flutter/Fireship
 Python/Hash/upload
 Python/Insta-Saved/Profiles
 Python/Instagram/Profiles
+
+# Misc
+vosk-model-*.zip
