@@ -8,17 +8,19 @@ w-adb
 Helmcharts
 Flutter-Apps
 
-# Tutorial projects
-Flutter/Codemy
-Flutter/Fireship
-
 # Python ignore
 __pycache__
 venv
 .venv
-Python/Hash/upload
 
 # Rust ignore
 target
 Rust/**/*.exe
 Rust/**/*.pdb
+
+# Folders ignore
+Flutter/Codemy
+Flutter/Fireship
+Python/Hash/upload
+Python/Insta-Saved/Profiles
+Python/Instagram/Profiles
