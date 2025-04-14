@@ -3,7 +3,9 @@ from subprocess import DEVNULL, STARTF_USESHOWWINDOW, STARTUPINFO, SW_HIDE, Pope
 from time import sleep
 
 
-def spawn_windows_process(cmd: str, title: str = "", minimized: bool = False) -> Popen[bytes]:
+def spawn_windows_process(
+    cmd: str, title: str = "", minimized: bool = False
+) -> Popen[bytes]:
     """Spawn the given windows process in a new shell.
 
     Args:
@@ -22,6 +24,7 @@ def spawn_windows_process(cmd: str, title: str = "", minimized: bool = False) ->
         args=args, shell=True, stdout=DEVNULL, stderr=DEVNULL, startupinfo=startupinfo
     )
     return process
+
 
 def wait_in_loop(start: datetime, wait: float = 30, prompt: str = "") -> None:
     """Function to keep program wait inside a loop

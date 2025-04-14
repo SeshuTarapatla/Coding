@@ -65,10 +65,18 @@ def start(emulator: str = "emulator", snap_to_zone: bool = True) -> None:
             wait_in_loop(started_at, prompt="Emulator not booted")
     while not (device.getprop("sys.boot_completed") == "1" and device.getprop("init.svc.bootanim") == "stopped"):
         wait_in_loop(started_at, prompt="Emulator not booted")
-    device.app_start("com.instagram.android")
 
 
 def get_emulator() -> AdbDevice:
+    """Return AdbDevice object of the emulator.
+
+    Raises:
+        AdbError: No emulator found.
+        AdbError: Multiple emulators found.
+
+    Returns:
+        AdbDevice: AdbDevice object of the emulator.
+    """
     emulators = list(filter(lambda x: str(x.serial).startswith("emulator"), adb.device_list()))
     if (total := len(emulators)) == 1:
         return emulators[0]

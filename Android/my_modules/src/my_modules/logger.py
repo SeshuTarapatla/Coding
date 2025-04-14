@@ -1,11 +1,12 @@
 from functools import wraps
 from typing import Any, Callable
+
 from rich.console import Console
 
 
 __all__ = ["console"]
-
 console = Console()
+
 
 def status_decorator(message: str) -> Callable:
     """A status decorator that prints rich.status while a function is getting executed.
@@ -13,7 +14,7 @@ def status_decorator(message: str) -> Callable:
     Args:
         message (str): Status messsage.
     """
-    def decorator(func: Callable)  -> Callable:
+    def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
             with console.status(message):

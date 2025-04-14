@@ -1,4 +1,6 @@
-from my_modules.android import emulator
+from pprint import pprint
+from my_modules import kubernetes
 
 
-emulator.start()
+data = kubernetes.get_json("postgres-auth-secret", "secret", base64decode=True)
+pprint(data)
