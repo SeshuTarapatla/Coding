@@ -26,7 +26,7 @@ def copy_directory(source_dir, destination_dir):
             shutil.copy2(source_item, destination_item)
 
 
-def rentention(n=30):
+def rentention(n=10):
     bkp_dir = Path("Backups")
     expired_bkps = sorted(bkp_dir.iterdir(), reverse=True)[n:]
     list(map(send2trash, expired_bkps))

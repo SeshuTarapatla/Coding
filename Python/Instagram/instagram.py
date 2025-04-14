@@ -102,9 +102,10 @@ class Profile:
                 if int(oneplus.shell(f"find {my_insta_dir} -type f -exec stat --format '%s' {{}} +").output.splitlines()[0]):
                     break
             if current % retry == 0:
-                if alt:
+                if alt and (current % (2 * retry) == 0):
                     oneplus.push("Profiles/no_dp.jpg", str(my_insta_dir))
-                    oneplus(description="Options").click()
+                    if not list(oneplus(text="Send to…")):
+                        oneplus(description="Options").click()
                 else:
                     oneplus.long_click()
             if current >= wait:
@@ -187,11 +188,11 @@ class Liked_User(Follower):
 
 @dataclass
 class Saved_User(Follower):
-    is_profile: bool
+    is_profile: bool = False
+    requested: bool = False
 
     def __init__(self, element: u2.UiObject) -> None:
         self.follow = "Follow"
-        self.is_profile = False
         super().__init__(element)
     
     def get_attributes(self) -> None:
@@ -208,6 +209,14 @@ class Saved_User(Follower):
                 oneplus.press("back")
                 break
             elif list(oneplus(resourceIds.followers_count)): 
+                while True:
+                    if list(oneplus(text="Requested")) or list(oneplus(text="Follow back"))  or list(oneplus(text="Following")):
+                        self.requested = True
+                        break
+                    elif list(oneplus(text="Follow")):
+                        break
+                    else:
+                        sleep(0.5)
                 oneplus.press("back")
                 self.is_profile = True
                 return super().generate_profile()
@@ -333,7 +342,9 @@ class Instagram:
                 if not saved_user.is_profile:
                     scroll_inverse(only_last=True)
                     continue
-                if not saved_user.verified:
+                elif saved_user.requested:
+                    pass
+                elif not saved_user.verified:
                     report = saved_user.generate_report()
                     save_path = self.save_dir / f"{saved_user.title}.jpg"
                     report.save(save_path, optimize=True)
