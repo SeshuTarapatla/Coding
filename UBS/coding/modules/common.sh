@@ -37,17 +37,15 @@ dispatch() {
     if [[ " ${_help[@]} " =~ " $1 " ]]; then
         func="$module"
         doc="./docs/${func}.txt"
-    else
-        if [[ -n $1 && ! $(declare -F "$1" 2>/dev/null) ]]; then
-            funcs=$(declare -F | awk 'BEGIN{ORS=", "}{print $3}' | sed 's/, $//')
-            echo -e "$module: invalid function -> '$1'"
-            echo -e "functions in current scope: $funcs\n"
-            echo -e "Try: '$0 --help' for more information."
-            exit 1
-        elif [[ " ${_help[@]} " =~ " $2 " ]]; then
-            func="$1"
-            doc="./docs/${func}.txt"
-        fi
+    elif [[ -n $1 && ! $(declare -F "$1" 2>/dev/null) ]]; then
+        funcs=$(declare -F | awk 'BEGIN{ORS=", "}{print $3}' | sed 's/, $//')
+        echo -e "$module: invalid function -> '$1'"
+        echo -e "functions in current scope: $funcs\n"
+        echo -e "Try: '$0 --help' for more information."
+        exit 1
+    elif [[ " ${_help[@]} " =~ " $2 " ]]; then
+        func="$1"
+        doc="./docs/${func}.txt"
     fi
     if [[ -n "$doc" ]]; then
         if ! cat $doc; then
