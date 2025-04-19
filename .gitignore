@@ -11,6 +11,7 @@ my-py-modules
 Android-Backup-Tool
 Insta-Automate (main)
 Insta-Automate
+mStorage
 
 # Python ignore
 __pycache__
